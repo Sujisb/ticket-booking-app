@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Booking</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🎟 Ticket Booking</h1>
+
+    <form id="ticketForm" class="form">
+      <input type="text" id="name" placeholder="Name" required>
+      <input type="text" id="event" placeholder="Event" required>
+      <input type="number" id="seats" placeholder="Seats" required min="1">
+      <input type="date" id="date" required>
+      <button type="submit" class="btn">Book Ticket</button>
+    </form>
+
+    <h2>Booked Tickets</h2>
+    <table id="ticketTable">
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Event</th><th>Seats</th><th>Date</th><th>Action</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+async function loadTickets() {
+  const res = await fetch('/api/tickets');
+  const data = await res.json();
+  const tbody = document.querySelector('#ticketTable tbody');
+  tbody.innerHTML = '';
+  data.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${t.id ?? ''}</td>
+      <td>${t.name}</td>
+      <td>${t.event}</td>
+      <td>${t.seats}</td>
+      <td>${t.date}</td>
+      <td><button onclick="deleteTicket(${t.id})">Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const ticket = {
+    name: document.getElementById('name').value,
+    event: document.getElementById('event').value,
+    seats: parseInt(document.getElementById('seats').value),
+    date: document.getElementById('date').value
+  };
+  await fetch('/api/tickets', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(ticket)
+  });
+  e.target.reset();
+  loadTickets();
+});
+
+async function deleteTicket(id) {
+  await fetch(`/api/tickets/${id}`, { method: 'DELETE' });
+  loadTickets();
+}
+
+loadTickets();
+</script>
+</body>
+</html>
